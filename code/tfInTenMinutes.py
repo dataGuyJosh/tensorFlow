@@ -15,7 +15,7 @@ y = df['Churn'].apply(lambda x: 1 if x == 'Yes' else 0)
 
 X_trn, X_tst, y_trn, y_tst = train_test_split(X, y, test_size=2)
 
-print(X_trn.head(), y_trn.head(), sep='\n')
+# print(X_trn.head(), y_trn.head(), sep='\n')
 
 '''
 Setup NN layers
@@ -30,12 +30,12 @@ model.add(Dense(units=1, activation='sigmoid'))
 model.compile(loss='binary_crossentropy', optimizer='sgd', metrics='accuracy')
 
 # Fit & Predict
-model.fit(X_trn,y_trn,epochs=500, batch_size=32)
+model.fit(X_trn,y_trn,epochs=100, batch_size=32)
 y_pred = model.predict(X_tst)
 # prediction output is a probability distribution i.e. floats between 0 & 1
 y_pred = [0 if i < 0.5 else 1 for i in y_pred]
 
-print(accuracy_score(y_tst,y_pred))
+print(f'Model Accuracy: {accuracy_score(y_tst,y_pred)}')
 
 # save model
 model.save('data/tfModel')

@@ -1,0 +1,5 @@
+autopep8
+numpy
+pandas
+scikit-learn
+tensorflow

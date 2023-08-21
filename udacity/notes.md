@@ -19,3 +19,14 @@ To over simplify — in supervised learning you know what you want to teach the 
 - self-driving cars
 - teaching computers to play games e.g. alpha go by google deep mind
 
+# Dense Layers
+- neurons in a dense layer are fully connected to neurons in adjacent layers
+- less scalable than a sparse layer but much more "potent"
+
+For a neural network with 3 inputs (x,y,z), 2 neurons in a hidden layer (a,b) and 1 neuron in the output layer (o).
+
+w = weight --> w_xa = weight of x on a
+b = bias --> ba = bias of b
+a = x * w_xa + y * w_ya + z * w_za + ba
+b = x * w_xb + y * w_yb + z * w_zb + bb
+o = a * w_oa + b * w_ob + bo

@@ -26,7 +26,7 @@ Creating a model
 
 '''
 # you can create layers individually
-l0 = tf.keras.layers.Dense(units=1, input_shape = [1])
+# l0 = tf.keras.layers.Dense(units=1, input_shape = [1])
 # or as part of the model definition
 model = tf.keras.Sequential([
     tf.keras.layers.Dense(units=1, input_shape=[1])

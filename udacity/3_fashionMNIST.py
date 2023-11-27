@@ -46,7 +46,7 @@ plt.figure()
 plt.imshow(image, cmap=plt.cm.binary)
 plt.colorbar()
 plt.grid(False)
-plt.show()
+# plt.show()
 
 # plot first 25 images
 plt.figure(figsize=(10, 10))
@@ -60,6 +60,48 @@ for img, label in tst.take(25):
     plt.imshow(img, cmap=plt.cm.binary)
     plt.xlabel(class_names[label])
     i += 1
-plt.show()
+# plt.show()
+
+
+'''
+Build the model
+Building the neural network requires configuring layers of the model, then compiling it.
+
+Setup the layers
+The basic building block of a neural network is the layer. A layer extracts a representation
+from the data fed into it. Hopefully, a series of connected layers results in a representation
+that is meaningful for the problem at hand. Much of deep learning consists of chaining together simple layers.
+Most layers, like "tf.keras.layers.Dense", have internal parameters which are adjusted during training.
+'''
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(28, 28, 1)),
+    tf.keras.layers.Dense(128, activation=tf.nn.relu),
+    tf.keras.layers.Dense(10, activation=tf.nn.softmax)
+])
+
+'''
+This network has 3 layers:
+- input (tf.keras.layers.Flatten)
+  - this layer transforms the images from a 2D array of 28x28 pixels to a 1D array of 784
+  - no parameters to learn, only reformats the data
+- hidden (tf.keras.layers.Dense)
+  - densely connected layer of 126 neurons (nodes)
+  - each takes input from all 784 nodes in the previous layer, weighting it according to hidden parameters
+- output (tf.keras.layers.Dense)
+  - 10-node softmax layer
+  - each node represents a class of clothing
+  - weighs inputs according to learned parameters outputting the probability that the image belongs to a given class
+
+Compile the model
+Before the model is ready for training, it needs a few more settings. These are added during the model's compile step:
+- loss function: measures how far the model's outputs are from desired output
+- optimizer: adjusts inner model parameters to minimize loss
+- metrics: monitors training and testing steps e.g. accuracy; the fraction of images which were correctly classified
+'''
+
+model.complie(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
 
 

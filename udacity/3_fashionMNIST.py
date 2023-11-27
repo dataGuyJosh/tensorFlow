@@ -2,24 +2,26 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-# Helpers
+# Import TensorFlow Datasets
+import tensorflow_datasets as tfds
+tfds.disable_progress_bar()
+
+# Helper libraries
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-# improve progress bar display (???)
-import tqdm
-import tqdm.auto
+import logging
+logger = tf.get_logger()
+logger.setLevel(logging.ERROR)
 
-tqdm.tdqm = tqdm.auto.tqdm
+dataset, metadata = tfds.load('fashion_mnist', as_supervised=True, with_info=True, data_dir='udacity/data')
+train_dataset, test_dataset = dataset['train'], dataset['test']
 
-dataset, metadata = tfds.load(
-    'fashion_mnist', as_supervised=True, with_info=True, data_dir='udacity/data')
-trn, tst = dataset['train'], dataset['test']
+class_names = metadata.features['label'].names
 
-class_names = ['T-shirt/top', 'Trousers', 'Pullover', 'Dress',
-               'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
-
+num_train_examples = metadata.splits['train'].num_examples
+num_test_examples = metadata.splits['test'].num_examples
 
 '''
 Each greyscale pixel has an integer value in the range [0,255].
@@ -34,11 +36,11 @@ def normalize(images, labels):
 
 
 # map applis normalize to each element in the dataset
-trn = trn.map(normalize)
-tst = tst.map(normalize)
+train_dataset = train_dataset.map(normalize)
+test_dataset = test_dataset.map(normalize)
 
 # take the first image & remove the colour dimension by reshaping
-for image, label in tst.take(1):
+for image, label in test_dataset.take(1):
     image = image.numpy().reshape((28, 28))
 
 # plot first image
@@ -49,17 +51,15 @@ plt.grid(False)
 # plt.show()
 
 # plot first 25 images
-plt.figure(figsize=(10, 10))
-i = 0
-for img, label in tst.take(25):
-    img = img.numpy().reshape((28, 28))
-    plt.subplot(5, 5, i+1)
+plt.figure(figsize=(10,10))
+for i, (image, label) in enumerate(train_dataset.take(25)):
+    image = image.numpy().reshape((28,28))
+    plt.subplot(5,5,i+1)
     plt.xticks([])
     plt.yticks([])
     plt.grid(False)
-    plt.imshow(img, cmap=plt.cm.binary)
+    plt.imshow(image, cmap=plt.cm.binary)
     plt.xlabel(class_names[label])
-    i += 1
 # plt.show()
 
 
@@ -100,8 +100,32 @@ Before the model is ready for training, it needs a few more settings. These are 
 - metrics: monitors training and testing steps e.g. accuracy; the fraction of images which were correctly classified
 '''
 
-model.complie(optimizer='adam',
+model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
 
+'''
+Train model
+Define the iteration behaviour for the training dataset.
+- dataset.repeat(): repeat training forever, limited by epochs parameter described below
+- dataset.shuffle(60000): randomize order
+- dataset.batch(32): tells "model.fit" to use batches of 32 images/labels
+  when updating model variables
+
+Training is performed by calling model.fit method:
+- feed training data to model using "train_dataset"
+- model learns associations between labels and images
+- "epoch=5" parameter limits training to 5 full iterations of the training dataset,
+  so a total of 5 * 60000 = 3000000 examples
+'''
+BATCH_SIZE = 32
+train_dataset = train_dataset.cache().repeat().shuffle(num_train_examples).batch(BATCH_SIZE)
+test_dataset = test_dataset.cache().batch(BATCH_SIZE)
+
+model.fit(train_dataset, epochs=5, steps_per_epoch=math.ceil(num_train_examples/BATCH_SIZE))
+
+
+# Evaluate accuracy: compare model performance on test dataset
+test_loss, test_accuracy = model.evaluate(test_dataset, steps=math.ceil(num_test_examples/32))
+print('Accuracy on test dataset:', test_accuracy)

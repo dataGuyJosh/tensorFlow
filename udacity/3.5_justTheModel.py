@@ -11,7 +11,6 @@ import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 
 # Helper libraries
-
 logger = tf.get_logger()
 logger.setLevel(logging.ERROR)
 
@@ -25,44 +24,19 @@ num_train_examples = metadata.splits['train'].num_examples
 num_test_examples = metadata.splits['test'].num_examples
 
 '''
-Each greyscale pixel has an integer value in the range [0,255].
-For the model to work, we need to normalize the range to [0,1].
+The value of each pixel in the image data is an integer in the range [0,255].
+For the model to work properly, these values need to be normalized to the range [0,1].
+So here we create a normalization function, and then apply it to each image in the test and train datasets.
 '''
-
-
 def normalize(images, labels):
     images = tf.cast(images, tf.float32)
     images /= 255
     return images, labels
 
 
-# map applis normalize to each element in the dataset
+# map applies normalize to each element in the dataset
 train_dataset = train_dataset.map(normalize)
 test_dataset = test_dataset.map(normalize)
-
-# take the first image & remove the colour dimension by reshaping
-for image, label in test_dataset.take(1):
-    image = image.numpy().reshape((28, 28))
-
-# plot first image
-plt.figure()
-plt.imshow(image, cmap=plt.cm.binary)
-plt.colorbar()
-plt.grid(False)
-# plt.show()
-
-# plot first 25 images
-plt.figure(figsize=(10, 10))
-for i, (image, label) in enumerate(train_dataset.take(25)):
-    image = image.numpy().reshape((28, 28))
-    plt.subplot(5, 5, i+1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.grid(False)
-    plt.imshow(image, cmap=plt.cm.binary)
-    plt.xlabel(class_names[label])
-# plt.show()
-
 
 '''
 Build the model
@@ -105,7 +79,6 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-
 '''
 Train model
 Define the iteration behaviour for the training dataset.
@@ -121,12 +94,19 @@ Training is performed by calling model.fit method:
   so a total of 5 * 60000 = 3000000 examples
 '''
 BATCH_SIZE = 32
-train_dataset = train_dataset.cache().repeat().shuffle(
-    num_train_examples).batch(BATCH_SIZE)
+train_dataset = train_dataset \
+    .cache() \
+    .repeat() \
+    .shuffle(num_train_examples) \
+    .batch(BATCH_SIZE)
+
 test_dataset = test_dataset.cache().batch(BATCH_SIZE)
 
-model.fit(train_dataset, epochs=5, steps_per_epoch=math.ceil(
-    num_train_examples/BATCH_SIZE))
+model.fit(
+    train_dataset,
+    epochs=5,
+    steps_per_epoch=math.ceil(num_train_examples/BATCH_SIZE)
+)
 
 
 # Evaluate accuracy: compare model performance on test dataset
@@ -140,14 +120,6 @@ for test_images, test_labels in test_dataset.take(1):
     test_images = test_images.numpy()
     test_labels = test_labels.numpy()
     predictions = model.predict(test_images)
-
-# print(
-#     predictions.shape,
-#     predictions[0],  # predictions for first image (probability distribution)
-#     np.argmax(predictions[0]),  # most probable image index
-#     test_labels[0],  # actual index
-#     sep='\n'
-# )
 
 
 # graphing functions
@@ -187,7 +159,7 @@ def plot_value_array(i, predictions_array, true_label):
 # Plot the first X test images, their predicted label, and the true label
 # Color correct predictions in blue, incorrect predictions in red
 num_rows = 5
-num_cols = 3
+num_cols = 5
 num_images = num_rows*num_cols
 plt.figure(figsize=(2*2*num_cols, 2*num_rows))
 for i in range(num_images):
@@ -196,20 +168,4 @@ for i in range(num_images):
     plt.subplot(num_rows, 2*num_cols, 2*i+2)
     plot_value_array(i, predictions, test_labels)
 
-# plt.show()
-
-# Grab an image from the test dataset
-img = test_images[0]
-# print(img.shape)
-
-# Add the image to a batch where it's the only member.
-img = np.array([img])
-# print(img.shape)
-
-# predict image
-predictions_single = model.predict(img)
-print(
-    predictions_single,
-    np.argmax(predictions_single[0]),
-    sep='\n'
-)
+plt.show()
